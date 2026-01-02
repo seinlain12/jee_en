@@ -1,22 +1,22 @@
-// 1. 로컬 스토리지에서 데이터를 가져옵니다.
-const savedData = localStorage.getItem('studyHubData');
+const DataManager = {
+    // 서버에서 데이터 가져오기
+    async getData(path) {
+        try {
+            const snapshot = await db.ref(path).once('value');
+            return snapshot.val() || [];
+        } catch (e) {
+            console.error("데이터 불러오기 실패:", e);
+            return [];
+        }
+    },
 
-// 2. 데이터가 있으면 가져오고, 없으면 기본 구조를 만듭니다.
-let studyData = savedData ? JSON.parse(savedData) : {
-    logs: {
-        "260101": {
-            chats: [
-                { role: "gemini", text: "반가워요! 오늘 공부를 시작해볼까요?\n엔터를 눌러 여러 줄을 입력해도 잘 저장됩니다." }
-            ],
-            sentences: [
-                { text: "K looks like a model.", trans: "K는 모델처럼 보여요." }
-            ]
+    // 서버에 데이터 저장하기
+    async saveData(path, data) {
+        try {
+            await db.ref(path).set(data);
+            console.log("자동 백업 완료");
+        } catch (e) {
+            console.error("백업 실패:", e);
         }
     }
 };
-
-// 3. 데이터를 로컬 스토리지에 저장하는 함수입니다.
-// App.js에서 추가/삭제가 일어날 때마다 이 함수를 호출합니다.
-function saveToStorage() {
-    localStorage.setItem('studyHubData', JSON.stringify(studyData));
-}
