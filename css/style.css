@@ -1,26 +1,44 @@
-:root {
-    --main-brown: #8b5a2b;
-    --light-yellow: #fffbe6;
-    --sidebar-width: 250px;
-}
+:root { --main-brown: #8b5a2b; --light-yellow: #fffbe6; }
 * { box-sizing: border-box; font-family: 'Pretendard', sans-serif; margin: 0; padding: 0; }
 body { display: flex; flex-direction: column; height: 100vh; background: #fdfdfd; overflow: hidden; }
-.header { height: 60px; padding: 0 20px; display: flex; align-items: center; border-bottom: 1px solid #eee; background: #fff; z-index: 1100; font-weight: bold; }
-.menu-btn { background: none; border: none; font-size: 24px; cursor: pointer; margin-right: 15px; }
-.layout { display: flex; flex: 1; overflow: hidden; position: relative; height: calc(100vh - 60px); }
-.sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid #eee; transition: 0.3s; z-index: 1050; }
-.sidebar li { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #f9f9f9; display: flex; align-items: center; gap: 10px; list-style: none; }
+.header { height: 60px; padding: 0 20px; display: flex; align-items: center; border-bottom: 1px solid #eee; background: #fff; font-weight: bold; position: sticky; top: 0; z-index: 100; }
+.menu-btn { font-size: 24px; background: none; border: none; cursor: pointer; margin-right: 15px; }
+.layout { display: flex; flex: 1; overflow: hidden; }
+.sidebar { width: 250px; border-right: 1px solid #eee; background: #fff; transition: 0.3s; }
+.sidebar li { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #f9f9f9; display: flex; align-items: center; gap: 10px; }
 .sidebar li:hover { background: #f5f5f5; }
-.content { flex: 1; padding: 20px; overflow-y: auto !important; -webkit-overflow-scrolling: touch; background: #fff; }
-.chat-bubble { padding: 15px; border-radius: 10px; margin-bottom: 10px; max-width: 85%; white-space: pre-wrap; line-height: 1.6; }
-.chat-bubble.gemini { background: #f1f1f1; align-self: flex-start; }
-.chat-bubble.me { background: #e3effd; color: #1a4da1; align-self: flex-end; }
-.sentence-item-card { background: var(--light-yellow); border: 1px solid #ffe58f; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-.brown-btn { background: var(--main-brown); color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; }
-.delete-btn { background: #ff4d4f; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: 10px; }
+.content { flex: 1; padding: 20px; overflow-y: auto; }
+
+/* 리스트 스타일 */
+.date-list { list-style: none; margin-top: 15px; }
+.date-list li { padding: 15px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 10px; cursor: pointer; }
+
+/* 말풍선 */
+.chat-container { display: flex; flex-direction: column; gap: 15px; margin: 20px 0; }
+.chat-bubble { padding: 12px; border-radius: 15px; max-width: 85%; font-size: 15px; word-break: break-all; }
+.chat-bubble.gemini { align-self: flex-start; background: #f0f0f0; border-bottom-left-radius: 2px; }
+.chat-bubble.me { align-self: flex-end; background: #e3effd; color: #1a4da1; border-bottom-right-radius: 2px; }
+
+/* 입력 영역 */
+.input-section, .sentence-section { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+textarea, input[type="text"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; }
+.btn-group { display: flex; gap: 10px; }
+.btn-group button { flex: 1; }
+
+.sentence-item-card { background: var(--light-yellow); border: 1px solid #ffe58f; padding: 12px; border-radius: 8px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
+.s-content strong { display: block; font-size: 16px; color: #333; }
+.s-content span { font-size: 13px; color: #666; }
+
+/* 버튼 스타일 */
+.brown-btn { background: var(--main-brown); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; }
+.white-btn { background: white; border: 1px solid #ddd; padding: 10px; border-radius: 6px; cursor: pointer; }
+.add-btn { width: 100%; padding: 12px; background: #fff; border: 1px solid var(--main-brown); color: var(--main-brown); border-radius: 8px; font-weight: bold; margin-bottom: 20px; }
+
+/* 테스트 */
+.test-card { background: #fff; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center; }
+
 @media (max-width: 768px) {
-    .sidebar { position: absolute; left: -250px; height: 100%; }
+    .sidebar { position: fixed; left: -250px; top: 60px; height: calc(100% - 60px); z-index: 99; }
     .sidebar.active { left: 0; }
-    .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1040; }
-    .overlay.active { display: block; }
+    .content { padding: 15px; }
 }
