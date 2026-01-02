@@ -1,9 +1,9 @@
 const App = {
     currentTestSentence: null,
+    currentTestWord: null, // 현재 테스트 중인 단어 저장
     geminiUrl: "https://gemini.google.com/u/3/app/c817dbe3e5aa5be3?hl=ko&pageId=none",
 
     init: function() {
-        // 🔒 비밀번호 인증 (970808)
         const password = prompt("비밀번호를 입력하세요.");
         if (password === "970808") {
             document.body.style.display = "flex";
@@ -24,11 +24,57 @@ const App = {
                 const view = item.getAttribute('data-view');
                 if (view === 'dates') UI.renderLogs();
                 else if (view === 'sentences') UI.renderSentencesPage();
+                else if (view === 'words') UI.renderWordsPage();
                 else if (view === 'test') App.startRandomTest();
+                else if (view === 'wordTest') App.startWordTest(); // 단어 테스트 시작
                 else if (view === 'gemini') window.open(this.geminiUrl, '_blank');
                 document.getElementById('sidebar').classList.remove('active');
             };
         });
+    },
+
+    addWord: function() {
+        const wordIn = document.getElementById('wordIn');
+        const meanIn = document.getElementById('wordMeanIn');
+        const descIn = document.getElementById('wordDescIn');
+        if (!wordIn.value.trim() || !meanIn.value.trim()) return alert("단어와 뜻을 입력하세요.");
+        if (!studyData.words) studyData.words = [];
+        studyData.words.push({
+            word: wordIn.value.trim(),
+            mean: meanIn.value.trim(),
+            desc: descIn.value.trim()
+        });
+        saveToStorage().then(() => UI.renderWordsPage());
+    },
+
+    deleteWord: function(index) {
+        if (confirm("이 단어를 삭제할까요?")) {
+            studyData.words.splice(index, 1);
+            saveToStorage().then(() => UI.renderWordsPage());
+        }
+    },
+
+    // 📖 단어 테스트 시작
+    startWordTest: function() {
+        const words = studyData.words || [];
+        if (words.length === 0) return alert("단어장에 등록된 단어가 없습니다.");
+        this.currentTestWord = words[Math.floor(Math.random() * words.length)];
+        UI.renderWordTestPage(this.currentTestWord);
+    },
+
+    // 📖 단어 테스트 정답 확인
+    checkWordAnswer: function() {
+        const userInput = document.getElementById('wordTestInput').value.trim().toLowerCase();
+        if (!userInput) return;
+        const correct = this.currentTestWord.word.toLowerCase();
+        const resDiv = document.getElementById('wordTestResult');
+        
+        if (userInput === correct) {
+            resDiv.innerHTML = `<div class="res correct" style="color:green; font-weight:bold; margin-top:10px;">⭕ 정답입니다!</div>`;
+            App.speak(correct); // 정답 시 발음 들려주기
+        } else {
+            resDiv.innerHTML = `<div class="res wrong" style="color:red; font-weight:bold; margin-top:10px;">❌ 틀렸습니다. 정답은 [ ${correct} ] 입니다.</div>`;
+        }
     },
 
     addChat: function(date) {
@@ -61,14 +107,10 @@ const App = {
         } catch (e) { alert("번역 실패"); }
     },
 
-    // 🗑️ 날짜 삭제 오류 수정
     deleteFullDate: function(date) {
         if (confirm(`${date} 기록을 삭제할까요?`)) {
-            // 1. 로컬 데이터에서 해당 날짜 제거
             if (studyData.logs && studyData.logs[date]) {
                 delete studyData.logs[date];
-                
-                // 2. Firebase 서버에 변경된 전체 데이터를 다시 저장 (강제 동기화)
                 db.ref('studyHubData').set(studyData)
                     .then(() => {
                         alert("삭제되었습니다.");
@@ -87,7 +129,19 @@ const App = {
         const c = correct.replace(/[\s\.\?\!]/g, "");
         const isOk = c.includes(u) || u.includes(c);
         const resDiv = document.getElementById('testResult');
-        resDiv.innerHTML = isOk ? `<div class="res correct">⭕ 정답입니다!</div>` : `<div class="res wrong">❌ 정답: ${correct}</div>`;
+        if (isOk) {
+            resDiv.innerHTML = `<div class="res correct" style="color:green; font-weight:bold; margin-top:10px;">⭕ 정답입니다!<br><small style="color:#666;">기준 답안: ${correct}</small></div>`;
+        } else {
+            resDiv.innerHTML = `
+                <div class="res wrong" style="color:red; font-weight:bold; margin-top:10px;">❌ 조금 다르네요.<br><small style="color:#666;">기준 답안: ${correct}</small></div>
+                <button class="white-btn" style="width:100%; margin-top:10px; font-size:12px;" onclick="App.forceCorrect()">의미는 맞아요! 정답 처리</button>
+            `;
+        }
+    },
+
+    forceCorrect: function() {
+        const resDiv = document.getElementById('testResult');
+        resDiv.innerHTML = `<div class="res correct" style="color:green; font-weight:bold; margin-top:10px;">⭕ 뉘앙스 확인! 정답 처리되었습니다.</div>`;
     },
 
     startRandomTest: function() {
@@ -128,4 +182,3 @@ const App = {
     }
 };
 document.addEventListener('DOMContentLoaded', () => App.init());
-
