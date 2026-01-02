@@ -1,0 +1,80 @@
+:root {
+    --primary: #4a90e2;
+    --success: #2ecc71;
+    --bg: #f8f9fa;
+    --card: #ffffff;
+}
+
+body {
+    font-family: 'Pretendard', sans-serif;
+    background-color: var(--bg);
+    margin: 0;
+    padding: 20px;
+    color: #333;
+}
+
+#app {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+h1 { text-align: center; color: var(--primary); }
+
+.card {
+    background: var(--card);
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.blue-btn { background: var(--primary); color: white; width: 100%; }
+.green-btn { background: var(--success); color: white; width: 100%; }
+.white-btn { background: white; border: 1px solid #ddd; }
+
+.log-item {
+    background: white;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.sentence-item {
+    background: #f1f8ff;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 8px;
+    position: relative;
+}
+
+.chat { padding: 10px; border-radius: 10px; margin-bottom: 5px; max-width: 80%; }
+.gemini { background: #e8f0fe; align-self: flex-start; }
+.me { background: #dcf8c6; align-self: flex-end; margin-left: auto; }
+
+.test-card { text-align: center; }
+.test-q { font-size: 1.2rem; font-weight: bold; color: var(--primary); }
+.res { padding: 15px; border-radius: 10px; margin-top: 10px; font-weight: bold; }
+.correct { background: #e6fffa; color: #2c7a7b; }
+.wrong { background: #fff5f5; color: #c53030; }
