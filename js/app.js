@@ -1,8 +1,19 @@
+// 전역 데이터 객체 (초기값)
+let studyData = { logs: {} };
+
 const App = {
     currentTestSentence: null,
 
-    init: function() {
+    // [수정] 앱 초기화 시 서버에서 데이터를 먼저 가져옴
+    init: async function() {
         this.bindMenu();
+        
+        // Firebase에서 데이터 로드 (DataManager는 data.js에 정의됨)
+        const serverData = await DataManager.loadAllData();
+        // 서버에 데이터가 있으면 적용, 없으면 기본값 유지
+        studyData.logs = serverData.records || {}; 
+        
+        console.log("온라인 데이터 로드 완료");
         UI.renderLogs();
     },
 
@@ -38,13 +49,20 @@ const App = {
         });
     },
 
+    // [수정] 데이터 변경 시마다 Firebase에 자동 저장
+    saveToFirebase: async function() {
+        await DataManager.saveRecords(studyData.logs);
+        console.log("서버 백업 완료");
+    },
+
     addChat: function(date) {
         const gIn = document.getElementById('geminiIn');
         const mIn = document.getElementById('meIn');
         if (gIn.value.trim()) studyData.logs[date].chats.push({ role: "gemini", text: gIn.value });
         if (mIn.value.trim()) studyData.logs[date].chats.push({ role: "me", text: mIn.value });
         gIn.value = ""; mIn.value = ""; 
-        saveToStorage(); 
+        
+        this.saveToFirebase(); // 서버 저장
         UI.renderLogDetail(date);
     },
 
@@ -58,7 +76,8 @@ const App = {
             const trans = data[0] ? data[0].map(i => i[0]).join("") : "";
             studyData.logs[date].sentences.push({ text, trans });
             sIn.value = "";
-            saveToStorage();
+            
+            this.saveToFirebase(); // 서버 저장
             UI.renderLogDetail(date);
         } catch (e) { alert("번역 실패"); }
     },
@@ -66,7 +85,7 @@ const App = {
     delSentence: function(date, index) {
         if (confirm("이 문장을 삭제할까요?")) {
             studyData.logs[date].sentences.splice(index, 1);
-            saveToStorage();
+            this.saveToFirebase(); // 서버 저장
             UI.renderLogDetail(date);
         }
     },
@@ -74,7 +93,7 @@ const App = {
     deleteFullDate: function(date) {
         if (confirm(`${date}의 모든 기록을 삭제하시겠습니까?`)) {
             delete studyData.logs[date];
-            saveToStorage();
+            this.saveToFirebase(); // 서버 저장
             UI.renderLogs();
         }
     },
@@ -106,9 +125,11 @@ const App = {
         const d = prompt("날짜 입력 (YYMMDD)");
         if (d && !studyData.logs[d]) { 
             studyData.logs[d] = { chats: [], sentences: [] }; 
-            saveToStorage(); UI.renderLogs(); 
+            this.saveToFirebase(); // 서버 저장
+            UI.renderLogs(); 
         }
     }
 };
 
+// 앱 초기화 실행
 document.addEventListener('DOMContentLoaded', () => App.init());
