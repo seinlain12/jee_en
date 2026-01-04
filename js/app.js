@@ -2,74 +2,43 @@ const App = {
     currentTestSentence: null,
     currentTestWord: null,
     geminiUrl: "https://gemini.google.com/u/3/app/c817dbe3e5aa5be3?hl=ko&pageId=none",
+    audio: new Audio(), // 음성 재생을 위한 오디오 객체 생성
 
     init: function() {
         const password = prompt("비밀번호를 입력하세요.");
         if (password === "970808") {
             document.body.style.display = "flex";
             this.bindMenu();
-            loadData(() => { UI.renderLogs(); });
-            
-            // 💡 아이폰에서 음성 목록 로딩을 보장하기 위한 강제 호출
-            this.getBestVoices(); 
-            if (window.speechSynthesis.onvoiceschanged !== undefined) {
-                window.speechSynthesis.onvoiceschanged = () => this.getBestVoices();
-            }
+            loadData(() => {
+                UI.renderLogs();
+            });
         } else {
             alert("비밀번호가 틀렸습니다.");
             window.location.reload();
         }
     },
 
-    // 🌐 사용 가능한 목소리 중 최상의 프리미엄 음성 추출
-    getBestVoices: function() {
-        return window.speechSynthesis.getVoices();
-    },
-
-    loadVoice: function(text) {
-        const voices = this.getBestVoices();
-        const isKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(text);
-        const isJapanese = /[\u3040-\u30ff]/.test(text);
-
-        if (isKorean) {
-            // ⭐ 유나(프리미엄)를 가장 먼저 찾고, 없으면 고품질(Enhanced) 한국어를 찾음
-            return voices.find(v => v.name.includes('Yuna')) || 
-                   voices.find(v => v.lang.includes('ko') && v.name.includes('Enhanced')) ||
-                   voices.find(v => v.lang.includes('ko'));
-        } else if (isJapanese) {
-            return voices.find(v => v.name.includes('Kyoko')) || 
-                   voices.find(v => v.lang.includes('ja'));
-        } else {
-            // ⭐ 영어는 무조건 Alex 프리미엄 고정
-            return voices.find(v => v.name.includes('Alex')) || 
-                   voices.find(v => v.name.includes('Samantha')) || 
-                   voices.find(v => v.lang.includes('en-US'));
-        }
-    },
-
+    // 🌐 구글 번역 엔진을 이용한 무료 고품질 TTS 함수
     speak: function(text) {
         if (!text) return;
 
-        // 🚫 발음 꼬임을 유발하는 특수문자 및 이모지 제거
+        // 🚫 불필요한 기호 및 이모지 제거 (발음 최적화)
         let cleanText = text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\u200d/g, ""); 
         cleanText = cleanText.replace(/[\*\"\#\(\)]/g, ""); 
-        cleanText = cleanText.replace(/[\r\n]+/gm, " ").replace(/\s+/g, " ").trim();
-        
-        window.speechSynthesis.cancel(); 
+        cleanText = cleanText.replace(/[\r\n]+/gm, " ").trim();
 
-        const utter = new SpeechSynthesisUtterance(cleanText);
-        const selectedVoice = this.loadVoice(cleanText);
-        
-        if (selectedVoice) {
-            utter.voice = selectedVoice;
-            utter.lang = selectedVoice.lang;
-        }
+        // 🔍 언어 감지 (한글이 포함되어 있으면 ko, 아니면 en)
+        const isKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(cleanText);
+        const lang = isKorean ? 'ko' : 'en';
 
-        // 💡 아이폰에서 끊김 현상을 줄이기 위해 속도를 0.85~0.9 정도로 설정
-        utter.rate = 0.9; 
-        utter.pitch = 1.0;
-        
-        window.speechSynthesis.speak(utter);
+        // 🔗 구글 TTS URL 생성 (client=tw-ob 파라미터가 핵심)
+        const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(cleanText)}&tl=${lang}&client=tw-ob`;
+
+        this.audio.pause(); // 이전 재생 중단
+        this.audio.src = ttsUrl;
+        this.audio.play().catch(e => {
+            console.error("재생 오류:", e);
+        });
     },
 
     bindMenu: function() {
