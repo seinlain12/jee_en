@@ -1,292 +1,58 @@
-:root { 
-    --main-brown: #8b5a2b; 
-    --light-yellow: #fffbe6; 
-}
+:root { --main-brown: #8b5a2b; --light-yellow: #fffbe6; }
+* { box-sizing: border-box; font-family: 'Pretendard', sans-serif; margin: 0; padding: 0; }
+body { display: flex; flex-direction: column; height: 100vh; background: #fdfdfd; overflow: hidden; }
+.header { height: 60px; padding: 0 20px; display: flex; align-items: center; border-bottom: 1px solid #eee; background: #fff; font-weight: bold; position: sticky; top: 0; z-index: 100; }
+.menu-btn { font-size: 24px; background: none; border: none; cursor: pointer; margin-right: 15px; }
+.layout { display: flex; flex: 1; overflow: hidden; }
+.sidebar { width: 250px; border-right: 1px solid #eee; background: #fff; transition: 0.3s; }
+.sidebar li { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #f9f9f9; display: flex; align-items: center; gap: 10px; }
+.sidebar li:hover { background: #f5f5f5; }
 
-* { 
-    box-sizing: border-box; 
-    font-family: 'Pretendard', sans-serif; 
-    margin: 0; 
-    padding: 0; 
-}
-
-body { 
-    display: flex; 
-    flex-direction: column; 
-    height: 100vh; 
-    background: #fdfdfd; 
-    overflow: hidden; 
-}
-
-.header { 
-    height: 60px; 
-    padding: 0 20px; 
-    display: flex; 
-    align-items: center; 
-    border-bottom: 1px solid #eee; 
-    background: #fff; 
-    font-weight: bold; 
-    position: sticky; 
-    top: 0; 
-    z-index: 100; 
-}
-
-.menu-btn { 
-    font-size: 24px; 
-    background: none; 
-    border: none; 
-    cursor: pointer; 
-    margin-right: 15px; 
-}
-
-.layout { 
-    display: flex; 
-    flex: 1; 
-    overflow: hidden; 
-}
-
-.sidebar { 
-    width: 250px; 
-    border-right: 1px solid #eee; 
-    background: #fff; 
-    transition: 0.3s; 
-}
-
-.sidebar li { 
-    padding: 15px 20px; 
-    cursor: pointer; 
-    border-bottom: 1px solid #f9f9f9; 
-    display: flex; 
-    align-items: center; 
-    gap: 10px; 
-}
-
-.sidebar li:hover { 
-    background: #f5f5f5; 
-}
-
-/* 📱 핵심 수정 부분: 하단 여백 확보 */
 .content { 
     flex: 1; 
     padding: 20px; 
-    padding-bottom: 250px; /* 브라우저 하단 UI 공간 확보 */
+    padding-bottom: 280px; /* 아이폰 하단 바 높이만큼 넉넉하게 확보 */
     overflow-y: auto; 
-    -webkit-overflow-scrolling: touch; /* 모바일 부드러운 스크롤 보장 */
+    -webkit-overflow-scrolling: touch; 
 }
 
-/* 리스트 스타일 */
-.date-list { 
-    list-style: none; 
-    margin-top: 15px; 
-}
+.date-list { list-style: none; margin-top: 15px; }
+.date-list li { padding: 15px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 10px; cursor: pointer; background: #fff; }
 
-.date-list li { 
-    padding: 15px; 
-    border: 1px solid #eee; 
-    border-radius: 8px; 
-    margin-bottom: 10px; 
-    cursor: pointer; 
-    background: #fff; 
-}
+.chat-container { display: flex; flex-direction: column; gap: 15px; margin: 20px 0; }
+.chat-row { display: flex; align-items: center; gap: 10px; width: 100%; }
+.chat-row.gemini { flex-direction: row; } 
+.chat-row.me { flex-direction: row-reverse; } 
+.chat-bubble { padding: 12px; border-radius: 15px; max-width: 75%; font-size: 15px; word-break: break-all; }
+.chat-bubble.gemini { background: #f0f0f0; border-bottom-left-radius: 2px; }
+.chat-bubble.me { background: #e3effd; color: #1a4da1; border-bottom-right-radius: 2px; }
+.chat-speak-btn { background: none; border: none; font-size: 20px; cursor: pointer; padding: 5px; opacity: 0.5; transition: 0.2s; }
+.chat-speak-btn:hover { opacity: 1; transform: scale(1.1); }
 
-/* 말풍선 */
-.chat-container { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 15px; 
-    margin: 20px 0; 
-}
+.input-section, .sentence-section { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+textarea, input[type="text"] { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; }
+.double-height { height: 100px; resize: vertical; line-height: 1.6; }
+.triple-height { height: 150px; resize: vertical; line-height: 1.6; }
 
-.chat-bubble { 
-    padding: 12px; 
-    border-radius: 15px; 
-    max-width: 85%; 
-    font-size: 15px; 
-    word-break: break-all; 
-}
+.btn-group { display: flex; gap: 10px; }
+.btn-group button { flex: 1; }
+.sentence-item-card { background: var(--light-yellow); border: 1px solid #ffe58f; padding: 15px; border-radius: 12px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
+.word-card { flex-direction: column; align-items: flex-start; padding: 20px; }
+.word-title { font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 5px; display: block; }
+.word-mean { font-size: 1.1em; font-weight: bold; color: var(--main-brown); margin: 10px 0; white-space: pre-wrap; }
+.word-desc { font-size: 0.95em; color: #666; line-height: 1.7; border-top: 1px dashed #ddd; padding-top: 12px; margin-top: 5px; width: 100%; white-space: pre-wrap; }
+.word-btns { display: flex; justify-content: flex-end; width: 100%; gap: 10px; margin-top: 15px; }
+.del-x-btn { background: #fff; border: 1px solid #ffbcbc; color: #ff4d4f; padding: 5px 15px; border-radius: 6px; cursor: pointer; }
 
-.chat-bubble.gemini { 
-    align-self: flex-start; 
-    background: #f0f0f0; 
-    border-bottom-left-radius: 2px; 
-}
+.brown-btn { background: var(--main-brown); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+.white-btn { background: white; border: 1px solid #ddd; padding: 10px; border-radius: 8px; cursor: pointer; }
+.add-btn { width: 100%; padding: 12px; background: #fff; border: 1px solid var(--main-brown); color: var(--main-brown); border-radius: 8px; font-weight: bold; margin-bottom: 20px; }
+.delete-all-btn { width: 100%; padding: 12px; border: 1px solid #ffbcbc; color: #ff4d4f; background: #fff; border-radius: 8px; margin-top: 40px; margin-bottom: 100px; cursor: pointer; }
 
-.chat-bubble.me { 
-    align-self: flex-end; 
-    background: #e3effd; 
-    color: #1a4da1; 
-    border-bottom-right-radius: 2px; 
-}
-
-/* 입력 영역 공통 */
-.input-section, .sentence-section { 
-    background: #fff; 
-    border: 1px solid #eee; 
-    padding: 15px; 
-    border-radius: 12px; 
-    margin-bottom: 20px; 
-}
-
-textarea, input[type="text"] { 
-    width: 100%; 
-    padding: 12px; 
-    margin-bottom: 10px; 
-    border: 1px solid #ddd; 
-    border-radius: 8px; 
-    font-size: 15px; 
-}
-
-/* 높이 확대 설정 */
-.double-height { 
-    height: 100px; 
-    resize: vertical; 
-    line-height: 1.6; 
-}
-
-.triple-height { 
-    height: 150px; 
-    resize: vertical; 
-    line-height: 1.6; 
-}
-
-.btn-group { 
-    display: flex; 
-    gap: 10px; 
-}
-
-.btn-group button { 
-    flex: 1; 
-}
-
-/* 카드 스타일 */
-.sentence-item-card { 
-    background: var(--light-yellow); 
-    border: 1px solid #ffe58f; 
-    padding: 15px; 
-    border-radius: 12px; 
-    margin-top: 15px; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    box-shadow: 0 2px 4px rgba(0,0,0,0.04); 
-}
-
-.word-card { 
-    flex-direction: column; 
-    align-items: flex-start; 
-    padding: 20px; 
-}
-
-.word-title { 
-    font-size: 1.3em; 
-    font-weight: bold; 
-    color: #333; 
-    margin-bottom: 5px; 
-    display: block; 
-}
-
-.word-mean { 
-    font-size: 1.1em; 
-    font-weight: bold; 
-    color: var(--main-brown); 
-    margin: 10px 0; 
-    white-space: pre-wrap; 
-}
-
-.word-desc { 
-    font-size: 0.95em; 
-    color: #666; 
-    line-height: 1.7; 
-    border-top: 1px dashed #ddd; 
-    padding-top: 12px; 
-    margin-top: 5px; 
-    width: 100%; 
-    white-space: pre-wrap; 
-}
-
-.word-btns { 
-    display: flex; 
-    justify-content: flex-end; 
-    width: 100%; 
-    gap: 10px; 
-    margin-top: 15px; 
-}
-
-.del-x-btn { 
-    background: #fff; 
-    border: 1px solid #ffbcbc; 
-    color: #ff4d4f; 
-    padding: 5px 15px; 
-    border-radius: 6px; 
-    cursor: pointer; 
-}
-
-/* 버튼 스타일 */
-.brown-btn { 
-    background: var(--main-brown); 
-    color: white; 
-    border: none; 
-    padding: 12px; 
-    border-radius: 8px; 
-    cursor: pointer; 
-    font-weight: bold; 
-}
-
-.white-btn { 
-    background: white; 
-    border: 1px solid #ddd; 
-    padding: 10px; 
-    border-radius: 8px; 
-    cursor: pointer; 
-}
-
-.add-btn { 
-    width: 100%; 
-    padding: 12px; 
-    background: #fff; 
-    border: 1px solid var(--main-brown); 
-    color: var(--main-brown); 
-    border-radius: 8px; 
-    font-weight: bold; 
-    margin-bottom: 20px; 
-}
-
-/* 🗑️ 하단 버튼 마진 추가 */
-.delete-all-btn { 
-    width: 100%; 
-    padding: 12px; 
-    border: 1px solid #ffbcbc; 
-    color: #ff4d4f; 
-    background: #fff; 
-    border-radius: 8px; 
-    margin-top: 40px; 
-    margin-bottom: 100px; /* 마지막 버튼 뒤 충분한 여백 확보 */
-    cursor: pointer; 
-}
-
-/* 테스트 */
-.test-card { 
-    background: #fff; 
-    padding: 20px; 
-    border-radius: 15px; 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
-    text-align: center; 
-}
+.test-card { background: #fff; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center; }
 
 @media (max-width: 768px) {
-    .sidebar { 
-        position: fixed; 
-        left: -250px; 
-        top: 60px; 
-        height: calc(100% - 60px); 
-        z-index: 99; 
-        box-shadow: 2px 0 5px rgba(0,0,0,0.1); 
-    }
-    .sidebar.active { 
-        left: 0; 
-    }
-    .content { 
-        padding: 15px; 
-        padding-bottom: 300px; /* 모바일에서 더 넉넉하게 여백 설정 */
-    }
+    .sidebar { position: fixed; left: -250px; top: 60px; height: calc(100% - 60px); z-index: 99; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
+    .sidebar.active { left: 0; }
+    .content { padding: 15px; padding-bottom: 300px; }
 }
