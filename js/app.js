@@ -10,7 +10,7 @@ const App = {
             this.bindMenu();
             loadData(() => { UI.renderLogs(); });
             
-            // 음성 엔진 예열
+            // 음성 엔진 예열 및 목록 로드
             window.speechSynthesis.getVoices();
             if (window.speechSynthesis.onvoiceschanged !== undefined) {
                 window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
@@ -21,14 +21,14 @@ const App = {
         }
     },
 
-    // 🌐 언어별 프리미엄 음성 고정 로직
+    // 🌐 기기별 프리미엄 음성(유나/알렉스) 강제 고정 로직
     loadVoice: function(text) {
         const voices = window.speechSynthesis.getVoices();
         const isKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(text);
         const isJapanese = /[\u3040-\u30ff]/.test(text);
 
         if (isKorean) {
-            // ⭐ 한국어 고품질 우선 순위: Yuna(향상됨) > Siri(고품질) > 기본 한국어
+            // ⭐ 설정하신 '유나' 프리미엄 음성을 최우선으로 찾습니다.
             return voices.find(v => v.name.includes('Yuna')) || 
                    voices.find(v => v.lang.includes('ko') && v.name.includes('Premium')) ||
                    voices.find(v => v.lang.includes('ko'));
@@ -36,10 +36,9 @@ const App = {
             return voices.find(v => v.name.includes('Kyoko')) || 
                    voices.find(v => v.lang.includes('ja'));
         } else {
-            // ⭐ 영어 프리미엄 고정: Alex > Samantha > Google US
+            // ⭐ 영어는 'Alex' 프리미엄 음성을 최우선으로 고정합니다.
             return voices.find(v => v.name.includes('Alex')) || 
                    voices.find(v => v.name.includes('Samantha')) || 
-                   voices.find(v => v.name.includes('Google US English')) ||
                    voices.find(v => v.lang.includes('en'));
         }
     },
@@ -47,12 +46,12 @@ const App = {
     speak: function(text) {
         if (!text) return;
 
-        // 특수문자 및 이모지 제거 (발음 꼬임 방지)
+        // 🚫 발음 방해 요소(이모지, 특수문자, 줄바꿈) 제거
         let cleanText = text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\u200d/g, ""); 
         cleanText = cleanText.replace(/[\*\"\#\(\)]/g, ""); 
         cleanText = cleanText.replace(/[\r\n]+/gm, " ").replace(/\s+/g, " ").trim();
         
-        window.speechSynthesis.cancel(); 
+        window.speechSynthesis.cancel(); // 이전 음성 즉시 중단
 
         const utter = new SpeechSynthesisUtterance(cleanText);
         const selectedVoice = this.loadVoice(cleanText);
@@ -62,7 +61,7 @@ const App = {
             utter.lang = selectedVoice.lang;
         }
 
-        utter.rate = 0.9; 
+        utter.rate = 0.9; // 자연스러운 속도
         utter.pitch = 1.0;
         
         window.speechSynthesis.speak(utter);
