@@ -10,7 +10,7 @@ const App = {
 
     init: function() {
         const password = prompt("비밀번호를 입력하세요.");
-        if (password === "970808") {
+        if (password === "009") {
             document.body.style.display = "flex";
             this.bindMenu();
             loadData(() => { UI.renderLogs(); });
@@ -217,3 +217,4 @@ const App = {
     saveData: function() { saveToStorage().then(() => alert("클라우드 저장 완료!")); }
 };
 document.addEventListener('DOMContentLoaded', () => App.init());
+
