@@ -1,59 +1,84 @@
-:root { --main-brown: #8b5a2b; --light-yellow: #fffbe6; }
-* { box-sizing: border-box; font-family: 'Pretendard', sans-serif; margin: 0; padding: 0; }
-body { display: flex; flex-direction: column; height: 100vh; background: #fdfdfd; overflow: hidden; }
-.header { height: 60px; padding: 0 20px; display: flex; align-items: center; border-bottom: 1px solid #eee; background: #fff; font-weight: bold; position: sticky; top: 0; z-index: 100; }
-.menu-btn { font-size: 24px; background: none; border: none; cursor: pointer; margin-right: 15px; }
-.layout { display: flex; flex: 1; overflow: hidden; }
-.sidebar { width: 250px; border-right: 1px solid #eee; background: #fff; transition: 0.3s; }
-.sidebar li { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #f9f9f9; display: flex; align-items: center; gap: 10px; }
-.sidebar li:hover { background: #f5f5f5; }
+const UI = {
+    contentArea: () => document.getElementById('content'),
 
-.content { 
-    flex: 1; 
-    padding: 20px; 
-    padding-bottom: 280px; /* 아이폰 하단 바 높이만큼 확보 */
-    overflow-y: auto; 
-    -webkit-overflow-scrolling: touch; 
-}
+    renderLogs: function() {
+        const dates = studyData.logs ? Object.keys(studyData.logs).sort().reverse() : [];
+        let html = `<h2>📅 공부 기록</h2><button class="add-btn" onclick="App.askNewDate()">+ 날짜 추가</button><ul class="date-list">${dates.map(date => `<li onclick="UI.renderLogDetail('${date}')">${date}</li>`).join('')}</ul>`;
+        this.contentArea().innerHTML = html;
+    },
 
-.date-list { list-style: none; margin-top: 15px; }
-.date-list li { padding: 15px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 10px; cursor: pointer; background: #fff; }
+    renderLogDetail: function(date) {
+        const log = studyData.logs[date] || { chats: [], sentences: [] };
+        const chats = log.chats || [];
+        const sentences = log.sentences || [];
 
-/* 💬 대화 정렬 및 듣기 버튼 스타일 */
-.chat-container { display: flex; flex-direction: column; gap: 15px; margin: 20px 0; }
-.chat-row { display: flex; align-items: center; gap: 10px; width: 100%; }
-.chat-row.gemini { flex-direction: row; } 
-.chat-row.me { flex-direction: row-reverse; } 
-.chat-bubble { padding: 12px; border-radius: 15px; max-width: 75%; font-size: 15px; word-break: break-all; }
-.chat-bubble.gemini { background: #f0f0f0; border-bottom-left-radius: 2px; }
-.chat-bubble.me { background: #e3effd; color: #1a4da1; border-bottom-right-radius: 2px; }
-.chat-speak-btn { background: none; border: none; font-size: 20px; cursor: pointer; padding: 5px; opacity: 0.5; transition: 0.2s; }
-.chat-speak-btn:hover { opacity: 1; transform: scale(1.1); }
+        let html = `
+            <div class="detail-header"><span class="back-link" onclick="UI.renderLogs()" style="cursor:pointer; color:#888;">← 목록으로</span><h2>📅 ${date} 공부 내용</h2></div>
+            <div class="chat-container" id="chatContainer">
+                ${chats.map((chat) => `
+                    <div class="chat-row ${chat.role}">
+                        <div class="chat-bubble ${chat.role}"><div class="bubble-content">${chat.text.replace(/\n/g, '<br>')}</div></div>
+                        <button class="chat-speak-btn" 
+                                data-text="${encodeURIComponent(chat.text)}" 
+                                onclick="App.speak(decodeURIComponent(this.dataset.text))">🔊</button>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="input-section">
+                <h3>✍️ 새 대화 추가</h3>
+                <textarea id="geminiIn" class="triple-height" placeholder="Gemini가 한 말"></textarea>
+                <textarea id="meIn" class="triple-height" placeholder="내가 한 말"></textarea>
+                <div class="btn-group"><button class="white-btn" onclick="App.addChat('${date}')">➕ 대화 추가</button><button class="brown-btn" onclick="App.saveData()">💾 저장 완료</button></div>
+            </div>
+            <div class="sentence-section">
+                <h3>⭐ 필수 문장</h3>
+                <div class="sentence-input-group" style="display:flex; gap:5px; margin-bottom:10px;"><input type="text" id="sentenceIn" placeholder="영어 문장 입력" style="flex:1; margin-bottom:0;"><button class="brown-btn" onclick="App.addSentence('${date}')">+ 추가</button></div>
+                <div id="sentenceList">
+                    ${sentences.map((s, i) => `
+                        <div class="sentence-item-card">
+                            <div class="s-content"><strong>${s.text}</strong><span>${s.trans}</span></div>
+                            <div class="s-actions">
+                                <button data-text="${encodeURIComponent(s.text)}" onclick="App.speak(decodeURIComponent(this.dataset.text))">🔊</button>
+                                <button class="del-x" onclick="App.delSentence('${date}', ${i})">❌</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            <button class="delete-all-btn" onclick="App.deleteFullDate('${date}')">🗑️ 날짜 삭제</button>
+        `;
+        this.contentArea().innerHTML = html;
+        const container = document.getElementById('chatContainer');
+        if(container) container.scrollTop = container.scrollHeight;
+    },
 
-.input-section, .sentence-section { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
-textarea, input[type="text"] { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; }
-.double-height { height: 100px; resize: vertical; line-height: 1.6; }
-.triple-height { height: 150px; resize: vertical; line-height: 1.6; }
+    renderSentencesPage: function() {
+        let html = `<h2>⭐ 필수 문장 모음</h2>`;
+        for (const date in studyData.logs) {
+            (studyData.logs[date].sentences || []).forEach(s => {
+                html += `
+                    <div class="sentence-item-card all-view">
+                        <div class="s-content"><strong>${s.text}</strong><p>${s.trans}</p></div>
+                        <button class="speak-btn-all" data-text="${encodeURIComponent(s.text)}" onclick="App.speak(decodeURIComponent(this.dataset.text))">🔊 발음 듣기</button>
+                    </div>`;
+            });
+        }
+        this.contentArea().innerHTML = html;
+    },
 
-.btn-group { display: flex; gap: 10px; }
-.btn-group button { flex: 1; }
-.sentence-item-card { background: var(--light-yellow); border: 1px solid #ffe58f; padding: 15px; border-radius: 12px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
-.word-card { flex-direction: column; align-items: flex-start; padding: 20px; }
-.word-title { font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 5px; display: block; }
-.word-mean { font-size: 1.1em; font-weight: bold; color: var(--main-brown); margin: 10px 0; white-space: pre-wrap; }
-.word-desc { font-size: 0.95em; color: #666; line-height: 1.7; border-top: 1px dashed #ddd; padding-top: 12px; margin-top: 5px; width: 100%; white-space: pre-wrap; }
-.word-btns { display: flex; justify-content: flex-end; width: 100%; gap: 10px; margin-top: 15px; }
-.del-x-btn { background: #fff; border: 1px solid #ffbcbc; color: #ff4d4f; padding: 5px 15px; border-radius: 6px; cursor: pointer; }
+    renderWordsPage: function() {
+        const words = studyData.words || [];
+        let html = `<h2>📖 나의 단어장</h2><div class="input-section"><h3>🆕 새 단어 등록</h3><input type="text" id="wordIn" placeholder="영어 단어"><label style="font-size: 12px; color: #888; margin-bottom: 5px; display: block;">뜻</label><textarea id="wordMeanIn" class="double-height" placeholder="단어의 뜻을 입력하세요"></textarea><label style="font-size: 12px; color: #888; margin-bottom: 5px; display: block;">설명 (예문 등)</label><textarea id="wordDescIn" class="double-height" placeholder="예문이나 추가 설명을 입력하세요"></textarea> <button class="brown-btn" style="width:100%; margin-top: 10px;" onclick="App.addWord()">단어장에 추가</button></div><div id="wordList">${words.map((w, i) => `<div class="sentence-item-card word-card"><div class="s-content"><strong class="word-title">${w.word}</strong><p class="word-mean">${w.mean}</p><div class="word-desc">${w.desc}</div></div><div class="s-actions word-btns"><button class="white-btn" data-text="${encodeURIComponent(w.word)}" onclick="App.speak(decodeURIComponent(this.dataset.text))">🔊 발음</button><button class="del-x-btn" onclick="App.deleteWord(${i})">❌ 삭제</button></div></div>`).join('')}</div>`;
+        this.contentArea().innerHTML = html;
+    },
 
-.brown-btn { background: var(--main-brown); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-.white-btn { background: white; border: 1px solid #ddd; padding: 10px; border-radius: 8px; cursor: pointer; }
-.add-btn { width: 100%; padding: 12px; background: #fff; border: 1px solid var(--main-brown); color: var(--main-brown); border-radius: 8px; font-weight: bold; margin-bottom: 20px; }
-.delete-all-btn { width: 100%; padding: 12px; border: 1px solid #ffbcbc; color: #ff4d4f; background: #fff; border-radius: 8px; margin-top: 40px; margin-bottom: 100px; cursor: pointer; }
+    renderTestPage: function(sentenceObj) {
+        let html = `<div class="test-container"><h2>🎲 랜덤 문장 테스트</h2><div class="test-card"><p>이 문장은 무슨 뜻일까요?</p><h3>${sentenceObj.text}</h3><button class="test-speak-btn" data-text="${encodeURIComponent(sentenceObj.text)}" onclick="App.speak(decodeURIComponent(this.dataset.text))">🔊 발음 듣기</button><div class="test-answer-area"><input type="text" id="testInput" placeholder="뜻을 입력하세요" onkeypress="if(event.keyCode==13) App.checkAnswer()"><button class="brown-btn" onclick="App.checkAnswer()">정답 확인</button></div><div id=\"testResult\"></div><button class=\"white-btn next-test-btn\" onclick=\"App.startRandomTest()\">다음 문제 ➡️</button></div></div>`;
+        this.contentArea().innerHTML = html;
+    },
 
-.test-card { background: #fff; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center; }
-
-@media (max-width: 768px) {
-    .sidebar { position: fixed; left: -250px; top: 60px; height: calc(100% - 60px); z-index: 99; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
-    .sidebar.active { left: 0; }
-    .content { padding: 15px; padding-bottom: 300px; }
-}
+    renderWordTestPage: function(wordObj) {
+        let html = `<div class="test-container"><h2>📖 나의 단어 테스트</h2><div class="test-card"><p>이 뜻을 가진 <strong>영어 단어</strong>는 무엇일까요?</p><h3 style="color: #8b5a2b; margin: 20px 0; white-space: pre-wrap;">${wordObj.mean}</h3><div class="test-answer-area"><input type="text" id="wordTestInput" placeholder="영어 단어를 입력하세요" onkeypress="if(event.keyCode==13) App.checkWordAnswer()"><button class="brown-btn" onclick="App.checkWordAnswer()">정답 확인</button></div><div id="wordTestResult"></div><button class="white-btn next-test-btn" onclick="App.startWordTest()">다음 문제 ➡️</button></div></div>`;
+        this.contentArea().innerHTML = html;
+    }
+};
