@@ -9,6 +9,8 @@ const App = {
             document.body.style.display = "flex";
             this.bindMenu();
             loadData(() => { UI.renderLogs(); });
+            
+            // 초기 로딩 시 음성 엔진 예열
             window.speechSynthesis.getVoices();
             if (window.speechSynthesis.onvoiceschanged !== undefined) {
                 window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
@@ -19,6 +21,7 @@ const App = {
         }
     },
 
+    // 🌐 다국어 및 프리미엄 음성(Alex) 고정 로직
     loadVoice: function(text) {
         const voices = window.speechSynthesis.getVoices();
         const isKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(text);
@@ -29,24 +32,24 @@ const App = {
         } else if (isJapanese) {
             return voices.find(v => v.lang.includes('ja')) || voices.find(v => v.name.includes('Kyoko'));
         } else {
-            return voices.find(v => v.name.includes('Alex')) || 
-                   voices.find(v => v.name.includes('Samantha')) || 
-                   voices.find(v => v.name.includes('Google US English')) ||
-                   voices.find(v => v.lang.includes('en'));
+            // ⭐ Alex 프리미엄 고정 (아이폰에서 가장 중요한 부분)
+            const premiumEnglish = voices.find(v => v.name.includes('Alex')) || 
+                                   voices.find(v => v.name.includes('Samantha')) || 
+                                   voices.find(v => v.name.includes('Google US English'));
+            return premiumEnglish || voices.find(v => v.lang.includes('en'));
         }
     },
 
     speak: function(text) {
         if (!text) return;
 
-        // 💡 1. 이모지 및 특수 기호 제거 로직 추가
-        // - 이모지 제거 (정규식 사용)
-        // - 큰따옴표("), 별표(*), 불필요한 기호 제거
-        let cleanText = text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\u200d/g, ""); // 이모지 제거
-        cleanText = cleanText.replace(/[\*\"\#\(\)]/g, ""); // *, ", #, ( ) 등 제거
-        cleanText = cleanText.replace(/[\r\n]+/gm, " ").replace(/\s+/g, " ").trim(); // 줄바꿈 정리
+        // 특수문자 및 이모지 제거 (발음 꼬임 방지)
+        let cleanText = text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\u200d/g, ""); 
+        cleanText = cleanText.replace(/[\*\"\#\(\)]/g, ""); 
+        cleanText = cleanText.replace(/[\r\n]+/gm, " ").replace(/\s+/g, " ").trim();
         
-        window.speechSynthesis.cancel();
+        window.speechSynthesis.cancel(); // 이전 음성 즉시 중단
+
         const utter = new SpeechSynthesisUtterance(cleanText);
         const selectedVoice = this.loadVoice(cleanText);
         
@@ -54,7 +57,11 @@ const App = {
             utter.voice = selectedVoice;
             utter.lang = selectedVoice.lang;
         }
-        utter.rate = 0.9;
+
+        utter.rate = 0.9; // 자연스러운 속도
+        utter.pitch = 1.0;
+        
+        // iOS에서 긴 문장 재생 시 끊김 방지를 위한 설정
         window.speechSynthesis.speak(utter);
     },
 
