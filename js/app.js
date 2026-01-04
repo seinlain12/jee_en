@@ -10,10 +10,10 @@ const App = {
             this.bindMenu();
             loadData(() => { UI.renderLogs(); });
             
-            // 음성 목록 로딩 보장
-            window.speechSynthesis.getVoices();
+            // 💡 아이폰에서 음성 목록 로딩을 보장하기 위한 강제 호출
+            this.getBestVoices(); 
             if (window.speechSynthesis.onvoiceschanged !== undefined) {
-                window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+                window.speechSynthesis.onvoiceschanged = () => this.getBestVoices();
             }
         } else {
             alert("비밀번호가 틀렸습니다.");
@@ -21,27 +21,36 @@ const App = {
         }
     },
 
-    // 🌐 언어별 프리미엄 음성 추출 (Alex 발음 보존)
+    // 🌐 사용 가능한 목소리 중 최상의 프리미엄 음성 추출
+    getBestVoices: function() {
+        return window.speechSynthesis.getVoices();
+    },
+
     loadVoice: function(text) {
-        const voices = window.speechSynthesis.getVoices();
+        const voices = this.getBestVoices();
         const isKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(text);
+        const isJapanese = /[\u3040-\u30ff]/.test(text);
 
         if (isKorean) {
-            // 한글 포함 시: 유나(프리미엄) 우선 선택
+            // ⭐ 유나(프리미엄)를 가장 먼저 찾고, 없으면 고품질(Enhanced) 한국어를 찾음
             return voices.find(v => v.name.includes('Yuna')) || 
+                   voices.find(v => v.lang.includes('ko') && v.name.includes('Enhanced')) ||
                    voices.find(v => v.lang.includes('ko'));
+        } else if (isJapanese) {
+            return voices.find(v => v.name.includes('Kyoko')) || 
+                   voices.find(v => v.lang.includes('ja'));
         } else {
-            // 영어만 있을 시: 알렉스(Alex) 고정 (발음 보존 핵심)
+            // ⭐ 영어는 무조건 Alex 프리미엄 고정
             return voices.find(v => v.name.includes('Alex')) || 
                    voices.find(v => v.name.includes('Samantha')) || 
-                   voices.find(v => v.lang.includes('en'));
+                   voices.find(v => v.lang.includes('en-US'));
         }
     },
 
     speak: function(text) {
         if (!text) return;
 
-        // 🚫 발음 방해 요소(이모지, 따옴표, 줄바꿈) 청소
+        // 🚫 발음 꼬임을 유발하는 특수문자 및 이모지 제거
         let cleanText = text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\u200d/g, ""); 
         cleanText = cleanText.replace(/[\*\"\#\(\)]/g, ""); 
         cleanText = cleanText.replace(/[\r\n]+/gm, " ").replace(/\s+/g, " ").trim();
@@ -56,7 +65,10 @@ const App = {
             utter.lang = selectedVoice.lang;
         }
 
-        utter.rate = 0.9; // 자연스러운 속도
+        // 💡 아이폰에서 끊김 현상을 줄이기 위해 속도를 0.85~0.9 정도로 설정
+        utter.rate = 0.9; 
+        utter.pitch = 1.0;
+        
         window.speechSynthesis.speak(utter);
     },
 
