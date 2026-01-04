@@ -10,10 +10,10 @@ const App = {
             this.bindMenu();
             loadData(() => { UI.renderLogs(); });
             
-            // 음성 엔진 예열 및 목록 로드
-            window.speechSynthesis.getVoices();
+            // 💡 아이폰에서 음성 목록 로딩을 보장하기 위한 강제 호출
+            this.getBestVoices(); 
             if (window.speechSynthesis.onvoiceschanged !== undefined) {
-                window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+                window.speechSynthesis.onvoiceschanged = () => this.getBestVoices();
             }
         } else {
             alert("비밀번호가 틀렸습니다.");
@@ -21,37 +21,41 @@ const App = {
         }
     },
 
-    // 🌐 기기별 프리미엄 음성(유나/알렉스) 강제 고정 로직
+    // 🌐 사용 가능한 목소리 중 최상의 프리미엄 음성 추출
+    getBestVoices: function() {
+        return window.speechSynthesis.getVoices();
+    },
+
     loadVoice: function(text) {
-        const voices = window.speechSynthesis.getVoices();
+        const voices = this.getBestVoices();
         const isKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(text);
         const isJapanese = /[\u3040-\u30ff]/.test(text);
 
         if (isKorean) {
-            // ⭐ 설정하신 '유나' 프리미엄 음성을 최우선으로 찾습니다.
+            // ⭐ 유나(프리미엄)를 가장 먼저 찾고, 없으면 고품질(Enhanced) 한국어를 찾음
             return voices.find(v => v.name.includes('Yuna')) || 
-                   voices.find(v => v.lang.includes('ko') && v.name.includes('Premium')) ||
+                   voices.find(v => v.lang.includes('ko') && v.name.includes('Enhanced')) ||
                    voices.find(v => v.lang.includes('ko'));
         } else if (isJapanese) {
             return voices.find(v => v.name.includes('Kyoko')) || 
                    voices.find(v => v.lang.includes('ja'));
         } else {
-            // ⭐ 영어는 'Alex' 프리미엄 음성을 최우선으로 고정합니다.
+            // ⭐ 영어는 무조건 Alex 프리미엄 고정
             return voices.find(v => v.name.includes('Alex')) || 
                    voices.find(v => v.name.includes('Samantha')) || 
-                   voices.find(v => v.lang.includes('en'));
+                   voices.find(v => v.lang.includes('en-US'));
         }
     },
 
     speak: function(text) {
         if (!text) return;
 
-        // 🚫 발음 방해 요소(이모지, 특수문자, 줄바꿈) 제거
+        // 🚫 발음 꼬임을 유발하는 특수문자 및 이모지 제거
         let cleanText = text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\u200d/g, ""); 
         cleanText = cleanText.replace(/[\*\"\#\(\)]/g, ""); 
         cleanText = cleanText.replace(/[\r\n]+/gm, " ").replace(/\s+/g, " ").trim();
         
-        window.speechSynthesis.cancel(); // 이전 음성 즉시 중단
+        window.speechSynthesis.cancel(); 
 
         const utter = new SpeechSynthesisUtterance(cleanText);
         const selectedVoice = this.loadVoice(cleanText);
@@ -61,7 +65,8 @@ const App = {
             utter.lang = selectedVoice.lang;
         }
 
-        utter.rate = 0.9; // 자연스러운 속도
+        // 💡 아이폰에서 끊김 현상을 줄이기 위해 속도를 0.85~0.9 정도로 설정
+        utter.rate = 0.9; 
         utter.pitch = 1.0;
         
         window.speechSynthesis.speak(utter);
