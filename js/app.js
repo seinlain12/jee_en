@@ -10,7 +10,7 @@ const App = {
             this.bindMenu();
             loadData(() => { UI.renderLogs(); });
             
-            // 초기 로딩 시 음성 엔진 예열
+            // 음성 엔진 예열
             window.speechSynthesis.getVoices();
             if (window.speechSynthesis.onvoiceschanged !== undefined) {
                 window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
@@ -21,22 +21,26 @@ const App = {
         }
     },
 
-    // 🌐 다국어 및 프리미엄 음성(Alex) 고정 로직
+    // 🌐 언어별 프리미엄 음성 고정 로직
     loadVoice: function(text) {
         const voices = window.speechSynthesis.getVoices();
         const isKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(text);
         const isJapanese = /[\u3040-\u30ff]/.test(text);
 
         if (isKorean) {
-            return voices.find(v => v.lang.includes('ko')) || voices.find(v => v.name.includes('Yuna'));
+            // ⭐ 한국어 고품질 우선 순위: Yuna(향상됨) > Siri(고품질) > 기본 한국어
+            return voices.find(v => v.name.includes('Yuna')) || 
+                   voices.find(v => v.lang.includes('ko') && v.name.includes('Premium')) ||
+                   voices.find(v => v.lang.includes('ko'));
         } else if (isJapanese) {
-            return voices.find(v => v.lang.includes('ja')) || voices.find(v => v.name.includes('Kyoko'));
+            return voices.find(v => v.name.includes('Kyoko')) || 
+                   voices.find(v => v.lang.includes('ja'));
         } else {
-            // ⭐ Alex 프리미엄 고정 (아이폰에서 가장 중요한 부분)
-            const premiumEnglish = voices.find(v => v.name.includes('Alex')) || 
-                                   voices.find(v => v.name.includes('Samantha')) || 
-                                   voices.find(v => v.name.includes('Google US English'));
-            return premiumEnglish || voices.find(v => v.lang.includes('en'));
+            // ⭐ 영어 프리미엄 고정: Alex > Samantha > Google US
+            return voices.find(v => v.name.includes('Alex')) || 
+                   voices.find(v => v.name.includes('Samantha')) || 
+                   voices.find(v => v.name.includes('Google US English')) ||
+                   voices.find(v => v.lang.includes('en'));
         }
     },
 
@@ -48,7 +52,7 @@ const App = {
         cleanText = cleanText.replace(/[\*\"\#\(\)]/g, ""); 
         cleanText = cleanText.replace(/[\r\n]+/gm, " ").replace(/\s+/g, " ").trim();
         
-        window.speechSynthesis.cancel(); // 이전 음성 즉시 중단
+        window.speechSynthesis.cancel(); 
 
         const utter = new SpeechSynthesisUtterance(cleanText);
         const selectedVoice = this.loadVoice(cleanText);
@@ -58,10 +62,9 @@ const App = {
             utter.lang = selectedVoice.lang;
         }
 
-        utter.rate = 0.9; // 자연스러운 속도
+        utter.rate = 0.9; 
         utter.pitch = 1.0;
         
-        // iOS에서 긴 문장 재생 시 끊김 방지를 위한 설정
         window.speechSynthesis.speak(utter);
     },
 
